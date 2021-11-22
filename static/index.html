@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+        <div id="app">
+                <apexchart type="rangeBar" :options="chartOptions" :series="series"></apexchart>
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>        
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue-apexcharts"></script> 
+
+        <script src="./vue-ws.js"></script>
+
+        <script>
+                Vue.use(VueWS, `ws://${location.host}/ws/`);
+
+                new Vue({
+        el: '#app',
+        components: {
+          apexchart: VueApexCharts,
+        },
+        data: {
+          
+          series: [
+            {
+              data: []
+            }
+          ],
+          chartOptions: {
+            chart: {
+              height: 350,
+              type: 'rangeBar'
+            },
+            plotOptions: {
+              bar: {
+                horizontal: true
+              }
+            },
+            xaxis: {
+              type: 'datetime'
+            }
+          },
+          
+          
+        },
+        webSockets: {
+                connected() {
+                        console.log("connected")
+                },
+                command: {
+                        push(msg) {
+                                const item = {
+                                        x: msg.name,
+                                        y: [
+                                                msg.start,
+                                                msg.end
+                                        ]
+                                }
+
+                                const index = this.series.findIndex(d => d.name == msg.group)
+                                if (index == -1) {
+                                        this.series.push({
+                                                name: msg.group,
+                                                data: [item]
+                                        })
+                                } else {
+                                        this.series[index].data.push(item)
+                                }
+                        }
+                }
+        }
+        
+      })
+        </script>
+</body>
+</html>
